@@ -9,7 +9,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__, instance_relative_config=True)
 os.makedirs(app.instance_path, exist_ok=True)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'falora-dev-secret-change-me')
-db_url = os.getenv('DATABASE_URL', 'sqlite:///falora.db')
+db_url = os.getenv('DATABASE_URL', '')
+if not db_url:
+    if os.getenv('VERCEL'):
+        db_url = 'sqlite:////tmp/falora.db'
+    else:
+        db_url = 'sqlite:///falora.db'
 if db_url.startswith('postgres://'): db_url = db_url.replace('postgres://','postgresql://',1)
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -190,3 +195,4 @@ def nf(e):
     if request.path.startswith('/api/'):return jsonify({'error':'Not found'}),404
     return render_template('404.html'),404
 if __name__=='__main__': app.run(host='0.0.0.0',port=int(os.getenv('PORT',5000)),debug=True)
+
